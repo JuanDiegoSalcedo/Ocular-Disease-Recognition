@@ -1,0 +1,8 @@
+pandas>=2.2
+numpy>=1.26
+matplotlib>=3.9
+opencv-python>=4.10
+scikit-learn>=1.5
+tensorflow>=2.16
+h5py>=3.11
+tables>=3.9

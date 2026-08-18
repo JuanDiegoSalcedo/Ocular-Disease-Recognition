@@ -1,19 +1,28 @@
-# Imágenes del dataset (descargar desde Kaggle, ver celda 1 del notebook)
-Main/preprocessed_images/
+# ── Images & raw data (download from Kaggle — see README) ────────────────────
+preprocessed_images/
+Main/
 
-# Entornos virtuales
+# ── Generated data files ──────────────────────────────────────────────────────
+*.h5
+*.csv
+data/
+
+# ── Trained model weights ─────────────────────────────────────────────────────
+models/
+*.keras
+*.h5
+
+# ── Python environments ───────────────────────────────────────────────────────
 .venv/
 venv/
 env/
-
-# Checkpoints de Jupyter
-.ipynb_checkpoints/
-
-# Python
 __pycache__/
 *.pyc
 *.pyo
 
-# Archivos de sistema
+# ── Jupyter ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db

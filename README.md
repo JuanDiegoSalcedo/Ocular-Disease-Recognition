@@ -88,18 +88,19 @@ Input (224 × 224 × 3)
         │
 ┌───────▼──────────────────────────────────────────────┐
 │  EfficientNetB0 (ImageNet pre-trained)               │
+│  Output: (7 × 7 × 1280) feature maps                │
 │  Phase 4: fully frozen (training=False)              │
-│  Phase 5: last 20 layers unfrozen, lr = 1e-5         │
+│  Phase 5: last 50 layers unfrozen, lr = 1e-5         │
 └───────┬──────────────────────────────────────────────┘
-        │  GlobalAveragePooling2D
+        │  GlobalAveragePooling2D  → (1280,)
         │  Dense(256, ReLU, L2=0.01)
-        │  Dropout(0.4)
+        │  Dropout(0.5)
         │  Dense(8, softmax)
         ▼
   Class probabilities (8)
 ```
 
-**Parameters:** ~4.05M total | ~0.53M trainable (Phase 4) | ~1.6M trainable (Phase 5)
+**Parameters:** 4,379,563 total | 329,992 trainable (Phase 4) | ~2.3M trainable (Phase 5, last 50 layers)
 
 ---
 

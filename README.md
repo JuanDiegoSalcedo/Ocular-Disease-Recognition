@@ -58,10 +58,10 @@ full_df.csv
     │     └─ Stratified 80/20 split → train_data.h5 / test_data.h5
     │
     └── 02_model_training.ipynb
-          ├─ Load images at 128×128 (float32 [0–255], EfficientNetB0 normalises internally)
+          ├─ Load images at 224×224 (float32 [0–255], EfficientNetB0 normalises internally)
           ├─ Build EfficientNetB0 + classification head
           ├─ Extract validation set (20% per class) from ORIGINAL images BEFORE augmentation
-          ├─ Augment minority classes (2–7) with 3 copies: H-flip, V-flip, H+V-flip + saturation
+          ├─ Tiered augmentation: 0–9 copies per class (10 transforms) → 2.2:1 imbalance ratio
           ├─ Compute balanced class weights (sklearn)
           ├─ Phase 4: train frozen base, 120 epochs max, EarlyStopping(patience=25) + ReduceLROnPlateau
           ├─ Phase 5: unfreeze last 20 layers, fine-tune at lr=1e-5 (GPU required)
@@ -73,7 +73,7 @@ full_df.csv
 | Decision | Rationale |
 |---|---|
 | EfficientNetB0 over custom CNN | Pre-trained ImageNet features transfer to retinal domain; outperforms a 4-block CNN from scratch with 5K images |
-| Images at 128×128 (not 224×224) | Memory constraint: 5113 images at 224×224 float32 exceeds 3.78 GB RAM; 128×128 uses ~0.9 GB |
+| Images at 224×224 (EfficientNetB0 native) | Native resolution maximises feature quality; requires ~7–8 GB RAM — Google Colab (T4 GPU) recommended |
 | Validation extracted before augmentation | Prevents augmented copies of validation images from leaking into the training set |
 | `float32 [0–255]` input (no `/255.0`) | EfficientNetB0 has a built-in rescaling layer; double normalisation degrades performance |
 | Balanced class weights | Penalise errors on minority classes proportionally; prevents the model from collapsing to "predict Normal" |
@@ -84,7 +84,7 @@ full_df.csv
 ## Model Architecture
 
 ```
-Input (128 × 128 × 3)
+Input (224 × 224 × 3)
         │
 ┌───────▼──────────────────────────────────────────────┐
 │  EfficientNetB0 (ImageNet pre-trained)               │
@@ -137,8 +137,8 @@ Input (128 × 128 × 3)
    can score higher accuracy than one that detects it. Macro recall and per-class F1 are the primary metrics.
 
 2. **Transfer learning requires adequate input resolution.** EfficientNetB0 was designed for 224×224.
-   Using 128×128 due to RAM constraints limits feature quality. Upgrading to 224×224 on a GPU instance
-   is the highest-impact remaining improvement.
+   Running at native resolution (~7–8 GB RAM) on a GPU instance is essential for full feature quality;
+   lower resolutions measurably degrade performance.
 
 3. **Fine-tuning is essential for cross-domain transfer.** With a frozen base (Phase 4), accuracy dropped
    to 37% despite better macro recall. Fine-tuning (Phase 5) recovered the accuracy gap (+12 pp) while
@@ -159,8 +159,8 @@ Input (128 × 128 × 3)
 
 ## Limitations
 
-- **Resolution bottleneck:** 128×128 is a RAM-driven compromise, not an architectural choice. Results
-  at 224×224 are expected to be ~5–10% higher.
+- **Resolution:** 224×224 (EfficientNetB0 native). Requires ~7–8 GB RAM — local runs need a machine
+  with sufficient memory; Google Colab (T4) is the recommended environment.
 - **Hypertension class:** 103 training samples are insufficient for reliable learning. The model's
   high recall for this class (Phase 4: 60%) comes from systematic overprediction rather than genuine
   feature learning.

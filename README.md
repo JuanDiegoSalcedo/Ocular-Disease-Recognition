@@ -90,7 +90,7 @@ Input (224 × 224 × 3)
 │  EfficientNetB0 (ImageNet pre-trained)               │
 │  Output: (7 × 7 × 1280) feature maps                │
 │  Phase 4: fully frozen (training=False)              │
-│  Phase 5: last 50 layers unfrozen, lr = 1e-5         │
+│  Phase 5: last 20 layers unfrozen, lr = 1e-5         │
 └───────┬──────────────────────────────────────────────┘
         │  GlobalAveragePooling2D  → (1280,)
         │  Dense(256, ReLU, L2=0.01)
@@ -100,7 +100,7 @@ Input (224 × 224 × 3)
   Class probabilities (8)
 ```
 
-**Parameters:** 4,379,563 total | 329,992 trainable (Phase 4) | ~2.3M trainable (Phase 5, last 50 layers)
+**Parameters:** 4,379,563 total | 329,992 trainable (Phase 4) | ~1.6M trainable (Phase 5, last 20 layers)
 
 ---
 
@@ -113,24 +113,24 @@ Input (224 × 224 × 3)
 | Baseline | Custom 4-block CNN from scratch | ~40% | ~0.30 | — |
 | Phase 1 | Bug fixes (normalisation, validation, EarlyStopping) | ~45% | ~0.45 | — |
 | Phase 2 | Balanced class weights | ~45% | 0.49 | — |
-| Phase 4 | EfficientNetB0 frozen base @ 224×224 + tiered augmentation | 53.2% | 0.54 | 0.50 |
-| **Phase 5** | **Fine-tuning (last 20 layers, lr=1e-5)** | **56.4%** | **0.57** | **0.54** |
+| Phase 4 | EfficientNetB0 frozen base @ 224×224 + tiered augmentation | 51.0% | 0.52 | 0.47 |
+| **Phase 5** | **Fine-tuning (last 20 layers, lr=1e-5)** | **55.8%** | **0.55** | **0.54** |
 
-> Phase 4 accuracy jumped from 37% to 53% when upgrading from 128×128 to 224×224 (EfficientNetB0 native resolution), confirming that input resolution is the dominant factor for frozen-base transfer learning on this dataset.
+> Phase 4 accuracy jumped from 37% to 51% when upgrading from 128×128 to 224×224 (EfficientNetB0 native resolution), confirming that input resolution is the dominant factor for frozen-base transfer learning on this dataset.
 
 ### Phase 5 — Per-class results (best model)
 
 | Class | Precision | Recall | F1-score | Support |
 |---|---|---|---|---|
-| Normal | 0.68 | 0.65 | 0.66 | 575 |
-| Diabetic Retinopathy | 0.52 | 0.44 | 0.48 | 322 |
-| Glaucoma | 0.40 | 0.51 | 0.45 | 57 |
-| Cataract | 0.81 | 0.81 | 0.81 | 59 |
-| AMD | 0.51 | 0.66 | 0.57 | 53 |
-| Hypertension | 0.11 | 0.16 | 0.13 | 25 |
-| Myopia | 0.80 | 0.98 | 0.88 | 46 |
-| Other | 0.29 | 0.33 | 0.31 | 142 |
-| **Macro avg** | **0.51** | **0.57** | **0.54** | 1279 |
+| Normal | 0.66 | 0.64 | 0.65 | 575 |
+| Diabetic Retinopathy | 0.47 | 0.43 | 0.45 | 322 |
+| Glaucoma | 0.43 | 0.49 | 0.46 | 57 |
+| Cataract | 0.81 | 0.78 | 0.79 | 59 |
+| AMD | 0.55 | 0.66 | 0.60 | 53 |
+| Hypertension | 0.14 | 0.12 | 0.13 | 25 |
+| Myopia | 0.85 | 0.96 | 0.90 | 46 |
+| Other | 0.30 | 0.35 | 0.33 | 142 |
+| **Macro avg** | **0.53** | **0.55** | **0.54** | 1279 |
 
 ---
 
@@ -144,8 +144,8 @@ Input (224 × 224 × 3)
    lower resolutions measurably degrade performance.
 
 3. **Resolution determines how much fine-tuning is needed.** At 128×128, Phase 4 scored only 37% — fine-tuning
-   was required to recover +12 pp. At native 224×224, Phase 4 already reaches 53%, and Phase 5 adds only
-   +3 pp. Higher-quality frozen features leave less for domain adaptation to correct.
+   was required to recover +12 pp. At native 224×224, Phase 4 already reaches 51%, and Phase 5 adds only
+   +5 pp. Higher-quality frozen features leave less for domain adaptation to correct.
 
 4. **Class weights and augmentation interact.** Augmenting a class increases its sample count, which
    reduces its computed class weight. The two strategies must be calibrated jointly.
@@ -158,10 +158,10 @@ Input (224 × 224 × 3)
    causes data leakage: augmented versions of validation images appear in the training set. This project
    corrects the order — validation is extracted first, augmentation is applied only to training images.
 
-7. **Phase 5 hit the epoch ceiling without converging.** Fine-tuning ran all 50 epochs; val_loss
-   was still declining at epoch 50 (1.094 vs 1.346 at epoch 1). Training accuracy (75%) outpaces
-   test accuracy (56%), indicating moderate overfitting — the model would benefit from additional
-   epochs and stronger regularisation.
+7. **Phase 5 shows moderate overfitting.** EarlyStopping triggers before the 100-epoch ceiling,
+   but training accuracy still runs well ahead of validation accuracy. The gap is partly structural:
+   the 22:1 class imbalance means augmented minority-class copies appear many times during training
+   while the validation set reflects natural distribution.
 
 ---
 
@@ -172,10 +172,10 @@ Input (224 × 224 × 3)
 - **Hypertension class:** 103 training samples are insufficient for reliable learning. With 25 test
   samples, a shift of 10 predictions changes recall by ±40 pp — any metric for this class is
   statistically unreliable and should be interpreted with caution.
-- **Overfitting in Phase 5:** Training accuracy (75%) exceeds test accuracy (56%) by 19 pp. Phase 5
-  also hit the 50-epoch ceiling without triggering EarlyStopping, suggesting the model was still
-  learning. Extending to 100 epochs and increasing Dropout (0.4 → 0.5) are the highest-priority
-  next steps.
+- **Overfitting in Phase 5:** Training accuracy exceeds test accuracy by a substantial margin.
+  EarlyStopping (patience=20) triggers before the 100-epoch ceiling; Dropout(0.5) and L2
+  regularisation are applied. Further improvement would require more training data or a
+  lighter fine-tuning strategy (fewer unfrozen layers or lower learning rate).
 - **Single-label assumption:** The ODIR-5K dataset contains multi-label patients (e.g. `DO`, `DH`).
   The pipeline uses the primary diagnosis only; multi-label classification is out of scope.
 - **No external validation:** All evaluation is on the ODIR-5K test split. Generalisation to other
@@ -188,22 +188,27 @@ Input (224 × 224 × 3)
 ```
 Ocular-Disease-Recognition/
 ├── README.md
+├── FINAL_ANALYSIS.md                    # Results analysis, per-class breakdown, dataset challenges
 ├── requirements.txt
 ├── LICENSE
 │
 ├── notebooks/
 │   ├── 01_eda_and_preprocessing.ipynb   # EDA, cleaning, train/test split
-│   └── 02_model_training.ipynb          # Model, training (Phase 4 + 5), evaluation
+│   ├── 02_model_training.ipynb          # 8-class model, training (Phase 4 + 5), evaluation
+│   └── 03_grouped_classification.ipynb  # 4-group clinical taxonomy classifier
 │
 ├── figures/
 │   ├── class_distribution.png           # Class count by gender
 │   ├── class_imbalance.png              # Normal vs. all other conditions
 │   ├── sample_images_per_class.png      # 10 fundus images per class
-│   └── augmented_samples.png            # Augmented image examples
+│   ├── augmented_samples.png            # Augmented image examples
+│   └── group_distribution.png           # 8-class vs. 4-group distribution comparison
 │
 └── models/                              # Saved model weights (git-ignored)
-    ├── efficientnetb0_phase4.h5         # Frozen-base checkpoint
-    └── efficientnetb0_finetuned.keras   # Fine-tuned checkpoint (best)
+    ├── efficientnetb0_phase4.h5         # 8-class frozen-base checkpoint
+    ├── efficientnetb0_finetuned.keras   # 8-class fine-tuned checkpoint (best)
+    ├── efficientnetb0_grouped_phase4.h5          # 4-group frozen-base checkpoint
+    └── efficientnetb0_grouped_finetuned.keras    # 4-group fine-tuned checkpoint (best)
 ```
 
 > `preprocessed_images/`, `Main/`, and `models/` are git-ignored.

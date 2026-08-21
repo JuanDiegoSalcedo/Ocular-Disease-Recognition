@@ -64,8 +64,9 @@ require fine-grained feature extraction — features a model cannot reliably lea
 regardless of augmentation strategy. The 9× augmentation generated 747 copies from the same 83
 source images, producing near-duplicate patterns that do not meaningfully expand the feature space.
 
-Precision (0.11) below recall (0.16) indicates the model overpredicts this class — a common failure
-mode when class weights force the model to predict a minority class it cannot distinguish reliably.
+Precision (0.14) above recall (0.12) indicates the model underpredicts this class — it misses
+more positive cases than it falsely predicts, a failure mode when the class has too few and too
+visually ambiguous examples to produce confident positive predictions.
 
 ### Diabetic Retinopathy — F1 0.45–0.48 (8-class)
 
@@ -159,7 +160,7 @@ disregard.
 ## Key Takeaways
 
 1. **Input resolution is the dominant factor for frozen-base transfer learning.** Moving from
-   128×128 to 224×224 improved Phase 4 accuracy by +16 pp. The frozen base at native resolution
+   128×128 to 224×224 improved Phase 4 accuracy by +14 pp. The frozen base at native resolution
    extracts sufficiently rich features that fine-tuning adds only marginal gain (+5 pp).
 
 2. **Class imbalance and augmentation must be calibrated jointly.** Augmenting a minority class

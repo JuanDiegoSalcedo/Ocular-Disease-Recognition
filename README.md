@@ -197,6 +197,9 @@ Ocular-Disease-Recognition/
 │   ├── 02_model_training.ipynb          # 8-class model, training (Phase 4 + 5), evaluation
 │   └── 03_grouped_classification.ipynb  # 4-group clinical taxonomy classifier
 │
+├── utils/
+│   └── image_utils.py                   # Shared load_images() and augment_images() helpers
+│
 ├── figures/
 │   ├── class_distribution.png           # Class count by gender
 │   ├── class_imbalance.png              # Normal vs. all other conditions
@@ -205,9 +208,9 @@ Ocular-Disease-Recognition/
 │   └── group_distribution.png           # 8-class vs. 4-group distribution comparison
 │
 └── models/                              # Saved model weights (git-ignored)
-    ├── efficientnetb0_phase4.h5         # 8-class frozen-base checkpoint
-    ├── efficientnetb0_finetuned.keras   # 8-class fine-tuned checkpoint (best)
-    ├── efficientnetb0_grouped_phase4.h5          # 4-group frozen-base checkpoint
+    ├── efficientnetb0_phase4.keras               # 8-class frozen-base checkpoint
+    ├── efficientnetb0_finetuned.keras            # 8-class fine-tuned checkpoint (best)
+    ├── efficientnetb0_grouped_phase4.keras       # 4-group frozen-base checkpoint
     └── efficientnetb0_grouped_finetuned.keras    # 4-group fine-tuned checkpoint (best)
 ```
 
@@ -221,7 +224,7 @@ Ocular-Disease-Recognition/
 ### Local
 
 ```bash
-git clone https://github.com/<your-username>/Ocular-Disease-Recognition.git
+git clone https://github.com/JuanDiegoSalcedo/Ocular-Disease-Recognition.git
 cd Ocular-Disease-Recognition
 
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate

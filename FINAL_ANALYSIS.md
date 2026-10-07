@@ -154,6 +154,7 @@ disregard.
 | `model.evaluate()` crash | Keras 3 / TF 2.16+ `optree` bug with `sparse_categorical_crossentropy` | Replaced with `sklearn.metrics.accuracy_score` + `log_loss` |
 | RAM constraint at 224×224 | ~7–8 GB required for full augmented training set | Google Colab T4 GPU required; 224×224 confirmed as necessary for full feature quality |
 | Non-reproducible validation split | `np.random.choice` without seed | Fixed `np.random.seed(511)` before split |
+| Non-reproducible augmentation | `tf.image.random_brightness` / `random_contrast` use TF's separate random state, not numpy | Added `tf.random.set_seed(511)` alongside `np.random.seed(511)` before split and augmentation |
 
 ---
 

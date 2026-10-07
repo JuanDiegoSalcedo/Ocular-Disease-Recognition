@@ -13,24 +13,24 @@ with a two-phase training strategy (frozen base + fine-tuning).
 
 | Experiment | Phase 4 Accuracy | Phase 5 Accuracy | Phase 5 Macro F1 |
 |---|---|---|---|
-| 8-class (individual diagnoses) | 51.0% | 55.8% | 0.54 |
+| 8-class (individual diagnoses) | 49.9% | 53.8% | 0.52 |
 | 4-group (clinical taxonomy) | 59.3% | 61.5% | 0.60 |
 
-The 4-group formulation achieves ~6 pp higher accuracy, but the improvement is partly structural
+The 4-group formulation achieves ~8 pp higher accuracy, but the improvement is partly structural
 (fewer, more balanced classes) rather than purely a gain in discriminative power.
 
 ---
 
 ## Where the Model Performed Well
 
-### Myopia — F1 0.90 (8-class)
+### Myopia — F1 0.87 (8-class)
 
 The strongest result in the dataset. Pathological myopia produces distinctive morphological changes
 visible in fundus photography: posterior pole stretching, a pale, elongated disc, and lacquer cracks.
 These features are geometrically consistent across patients and contrast clearly with other conditions.
-High recall (0.96) with high precision (0.85) confirms genuine feature learning, not overprediction.
+High recall (0.98) with precision (0.79) confirms genuine feature learning, not overprediction.
 
-### Cataract — F1 0.79 (8-class)
+### Cataract — F1 0.81 (8-class)
 
 Cataracts are unusual among the 8 classes because the condition directly degrades the fundus image
 itself — a lens opacity scatters light, producing a characteristic hazy, low-contrast appearance.
@@ -44,7 +44,7 @@ to be classified as a group with high reliability. All three involve structural 
 physical optics of the eye that manifest distinctly in fundus photography. This is the strongest
 evidence in favour of the grouped formulation.
 
-### AMD — F1 0.60 (8-class), contained in Degenerative group
+### AMD — F1 0.52 (8-class), contained in Degenerative group
 
 Age-related Macular Degeneration produces characteristic drusen deposits in the macula — small,
 bright yellow-white spots concentrated in the centre of the image. This spatial signature is
@@ -55,7 +55,7 @@ augmentation (7 copies) brought its effective representation up to ~1,368 sample
 
 ## Where the Model Struggled
 
-### Hypertension — F1 0.13 (8-class)
+### Hypertension — F1 0.15 (8-class)
 
 The consistent worst performer across all experiments. The fundamental problem is data volume:
 103 training samples after stratified splitting yield only ~83 images for training. Hypertensive
@@ -64,11 +64,12 @@ require fine-grained feature extraction — features a model cannot reliably lea
 regardless of augmentation strategy. The 9× augmentation generated 747 copies from the same 83
 source images, producing near-duplicate patterns that do not meaningfully expand the feature space.
 
-Precision (0.14) above recall (0.12) indicates the model underpredicts this class — it misses
-more positive cases than it falsely predicts, a failure mode when the class has too few and too
-visually ambiguous examples to produce confident positive predictions.
+Recall (0.16) above precision (0.14) indicates the model slightly overpredicts this class — it
+generates marginally more false positives than it misses positive cases, a pattern consistent with
+the model being pushed by class weights to predict the minority class despite insufficient feature
+evidence.
 
-### Diabetic Retinopathy — F1 0.45–0.48 (8-class)
+### Diabetic Retinopathy — F1 0.46 (8-class)
 
 Counterintuitively, the second-largest class (1,286 training samples) does not rank among the
 better-performing classes. Diabetic Retinopathy (DR) presents across a wide severity spectrum:
@@ -81,12 +82,12 @@ dataset), and the pipeline collapses multi-label patients to a single primary di
 introduces label noise: patients classified as "D" may have retinal features associated with their
 secondary condition.
 
-### Other diseases — F1 0.33 (8-class)
+### Other diseases — F1 0.31 (8-class)
 
 By construction, the "Other" class is a catch-all containing conditions not assigned to the
 remaining 7 categories. It is the third-largest class (566 samples) but the most internally
 heterogeneous. Without a consistent visual signature, the model cannot learn a reliable decision
-boundary. The F1 of 0.33 reflects random-adjacent performance on a large, diverse class.
+boundary. The F1 of 0.31 reflects random-adjacent performance on a large, diverse class.
 
 ### Vascular/Metabolic Group — F1 0.53 (4-group)
 
@@ -161,8 +162,8 @@ disregard.
 ## Key Takeaways
 
 1. **Input resolution is the dominant factor for frozen-base transfer learning.** Moving from
-   128×128 to 224×224 improved Phase 4 accuracy by +14 pp. The frozen base at native resolution
-   extracts sufficiently rich features that fine-tuning adds only marginal gain (+5 pp).
+   128×128 to 224×224 improved Phase 4 accuracy by +13 pp. The frozen base at native resolution
+   extracts sufficiently rich features that fine-tuning adds only marginal gain (+4 pp).
 
 2. **Class imbalance and augmentation must be calibrated jointly.** Augmenting a minority class
    increases its sample count, which reduces its computed class weight. Applying both independently

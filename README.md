@@ -113,24 +113,24 @@ Input (224 × 224 × 3)
 | Baseline | Custom 4-block CNN from scratch | ~40% | ~0.30 | — |
 | Phase 1 | Bug fixes (normalisation, validation, EarlyStopping) | ~45% | ~0.45 | — |
 | Phase 2 | Balanced class weights | ~45% | 0.49 | — |
-| Phase 4 | EfficientNetB0 frozen base @ 224×224 + tiered augmentation | 51.0% | 0.52 | 0.47 |
-| **Phase 5** | **Fine-tuning (last 20 layers, lr=1e-5)** | **55.8%** | **0.55** | **0.54** |
+| Phase 4 | EfficientNetB0 frozen base @ 224×224 + tiered augmentation | 49.9% | 0.57 | 0.49 |
+| **Phase 5** | **Fine-tuning (last 20 layers, lr=1e-5)** | **53.8%** | **0.56** | **0.52** |
 
-> Phase 4 accuracy jumped from 37% to 51% when upgrading from 128×128 to 224×224 (EfficientNetB0 native resolution), confirming that input resolution is the dominant factor for frozen-base transfer learning on this dataset.
+> Phase 4 accuracy jumped from 37% to 50% when upgrading from 128×128 to 224×224 (EfficientNetB0 native resolution), confirming that input resolution is the dominant factor for frozen-base transfer learning on this dataset.
 
 ### Phase 5 — Per-class results (best model)
 
 | Class | Precision | Recall | F1-score | Support |
 |---|---|---|---|---|
-| Normal | 0.66 | 0.64 | 0.65 | 575 |
-| Diabetic Retinopathy | 0.47 | 0.43 | 0.45 | 322 |
-| Glaucoma | 0.43 | 0.49 | 0.46 | 57 |
-| Cataract | 0.81 | 0.78 | 0.79 | 59 |
-| AMD | 0.55 | 0.66 | 0.60 | 53 |
-| Hypertension | 0.14 | 0.12 | 0.13 | 25 |
-| Myopia | 0.85 | 0.96 | 0.90 | 46 |
-| Other | 0.30 | 0.35 | 0.33 | 142 |
-| **Macro avg** | **0.53** | **0.55** | **0.54** | 1279 |
+| Normal | 0.67 | 0.58 | 0.62 | 575 |
+| Diabetic Retinopathy | 0.48 | 0.45 | 0.46 | 322 |
+| Glaucoma | 0.38 | 0.51 | 0.43 | 57 |
+| Cataract | 0.81 | 0.81 | 0.81 | 59 |
+| AMD | 0.45 | 0.62 | 0.52 | 53 |
+| Hypertension | 0.14 | 0.16 | 0.15 | 25 |
+| Myopia | 0.79 | 0.98 | 0.87 | 46 |
+| Other | 0.27 | 0.35 | 0.31 | 142 |
+| **Macro avg** | **0.50** | **0.56** | **0.52** | 1279 |
 
 ---
 
@@ -144,8 +144,8 @@ Input (224 × 224 × 3)
    lower resolutions measurably degrade performance.
 
 3. **Resolution determines how much fine-tuning is needed.** At 128×128, Phase 4 scored only 37% — fine-tuning
-   was required to recover +12 pp. At native 224×224, Phase 4 already reaches 51%, and Phase 5 adds only
-   +5 pp. Higher-quality frozen features leave less for domain adaptation to correct.
+   was required to recover +12 pp. At native 224×224, Phase 4 already reaches 50%, and Phase 5 adds only
+   +4 pp. Higher-quality frozen features leave less for domain adaptation to correct.
 
 4. **Class weights and augmentation interact.** Augmenting a class increases its sample count, which
    reduces its computed class weight. The two strategies must be calibrated jointly.
